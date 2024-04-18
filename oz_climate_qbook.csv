@@ -1,0 +1,201 @@
+code,desc
+RespondentID,RespondentID
+StartDate,StartDate
+EndDate,EndDate
+q1_1,We are approaching the limit of the number of people the earth can support.
+q1_2,Humans have the right to modify the natural environment to suit their needs.
+q1_3,"When humans interfere with nature, it often produces disastrous consequences."
+q1_4,Human ingenuity will ensure that we do NOT make the earth unlivable.
+q1_5,Humans are severely abusing the environment.
+q1_6,The earth has plenty of natural resources if we just learn how to develop them.
+q1_7,Plants and animals have as much right as humans to exist.
+q2_1,The balance of nature is strong enough to cope with the impacts of modern industrial nations.
+q2_2,Despite our special abilities humans are still subject to the laws of nature.
+q2_3,Human destruction of the natural environment has been greatly exaggerated.
+q2_4,The earth has only limited room and resources.
+q2_5,Humans were meant to rule over the rest of nature.
+q2_6,The balance of nature is very delicate and easily upset.
+q2_7,Humans will eventually learn enough about how nature works to be able to control it.
+q2_8,"If things continue on their present course, we will soon experience a major ecological disaster."
+q3_1,Installing green technologies (such as solar or wind) in our homes and neighbourhoods will save us money in the long term
+q3_2,"Manufacturing solar panels, wind turbines and other alternative energy equipment is a good way to generate jobs"
+q3_3,Coal mines have too much influence today
+q3_4,I support pollution standards even if it means shutting down factories
+q3_5,I must admit that my own behaviour contributes to harming the environment
+q3_6,Recent natural disasters were affected by climate change
+q3_7,It is God's will that we use up whatever resources nature provides
+q4,What do you think?  Do you think that climate change is happening?
+q5,How sure are you that climate change is happening?
+q6,How sure are you that climate change is not happening?
+q7,"Assuming climate change is happening, do you think it is..."
+q7_other,Other (please specify)
+q8,Which comes closer to your own view?
+q9,"Thinking about what you have seen or read, how confident are you in scientific predictions about the effects of climate change?"
+q10,"On a scale from -3 (very bad) to +3 (very good), do you think climate change is a bad or a good thing?"
+q11,How worried are you about climate change?
+q12,How much had you thought about climate change before today?
+q13,How important is the issue of climate change to you personally?
+q14_1,I could easily change my mind about climate change
+q14_2,I have personally experienced the effects of climate change
+q15,Which of the following statements comes closest to your view?
+q16_1,The greenhouse effect is caused by heat from the sun being trapped by the atmosphere
+q16_2,"Per person, Australians produce more greenhouse gas emissions than most other people in the world"
+q16_3,Recycling waste helps to reduce greenhouse gas emissions
+q16_4,"Today, generating electricity from renewable sources (such as solar and wind) costs about the same as generating electricity from coal"
+q16_5,In Australia electricity generation is a bigger source of greenhouse gas emissions than transport
+q16_6,Australians pay more for electricity than most other people in the world
+q16_7,"Whatever people do, climate change will still have some impacts on the earth"
+q16_8,The hole in the ozone layer is a major climate issue
+q17,How much do you think climate change will harm you personally?
+q18,How much do you think climate change will harm your local area?
+q19,How much do you think climate change will harm the world as a whole?
+q20,How much do you think climate change will harm future generations?
+q21,How much do you think climate change will harm plant and animal species?
+q22,When do you think climate change will start to harm people in Australia?
+q23_1,If we don't do something now about climate change we could end up having our farmlands turn to desert
+q23_2,I have noticed that over the years the climate is changing in my local area
+q23_3,I worry about the effect of environmental pollution on my family's health
+q24_1,The actions of a single individual won't make any difference in climate change
+q24_2,"New technologies can solve climate change, without individuals having to make big changes in their lives"
+q25,"Think back to the energy-saving actions you're already doing and those you'd like to do over the next 12 months.  If you did most of these things, how much do you think it would reduce your personal contribution to climate change?"
+q26,"If most people in Australia did these same actions, how much would it reduce climate change?"
+q27,"If most people in the modern industrialised countries around the world did these same actions, how much would it reduce climate change?"
+q28,"Written letters, emailed, or phoned government officials to urge them to take action to reduce climate change?"
+q29,Rewarded companies that are taking steps to reduce climate change by buying their products?
+q30,Punished companies that are opposing steps to reduce climate change by NOT buying their products?
+q31,Do you intend to buy the products of companies that are taking steps to reduce climate change...
+q32,Would you like to punish companies that are opposing steps to reduce climate change by NOT buying their products...
+q33,"How often do you in the winter, set the temperature in your house to 20 degrees celsius or cooler?"
+q34,"Over the next 12 months, would you like to turn down the temperature in your house in winter to 20 degrees celsius or cooler..."
+q35,How often do you use public transportation or car pool?
+q36,"Over the next 12 months, would you like to use public transport or car pool..."
+q37,How often do you walk or bike instead of driving?
+q38,"Over the next 12 months, would you like to walk or bike instead of driving..."
+q39,How many of the light bulbs in your home are energy efficient?
+q40,Over the next 12 months are you likely to change most of the light bulbs in your home to energy efficient light bulbs
+q41_1,"In the past year, I have made a special effort to use less energy at home"
+q41_2,"If I could afford it, I would be willing to install things to make my home more energy efficient than it is now"
+q41_3,I make a special effort to look for electrical appliances that are energy efficient
+q41_4,In the past year I have made a special effort to buy fewer white goods and other appliances
+q41_5,I am embarrassed to do anything about climate change because my friends think it is stupid
+q41_6,I feel pressured to change because people around me think that my lifestyle is bad for the planet
+q41_7,"In the past year, I have made a special effort to use less petrol by driving less"
+q42,"Do you think climate change should be a low, medium, high or very high priority for the Australian Government?"
+q43,Do you think companies and industry should be doing more or less to address climate change?
+q44,Do you think individual Australians should be doing more or less to address climate change?
+q45,How big an effort should Australia make to reduce climate change?
+q46,Australia should reduce its greenhouse gas emissions...
+q47_2,I believe what Tony Abbott has to say about climate change
+q47_3,I believe what Bob Brown has to say about climate change
+q47_4,Australia should increase its efforts to reduce pollution regardless of what other countries do
+q47_5,Companies should be rewarded by the government for polluting less than they have in the past
+q48_1,I think Australia should support research and development into new low emissions technologies
+q48_2,Australia should reduce its carbon emissions
+q48_3,I think Australia should have either a carbon tax or an ETS (emissions trading scheme)
+q48_4,It is better for Australia to have a carbon tax than an ETS (emissions trading scheme)
+q48_5,I think Australia should directly invest in actions to reduce carbon emissions rather than have a carbon tax
+q48_6,Australia should not have a carbon tax until the US and China also have one
+q49_1,We should compensate industries that create a lot of carbon emissions such as electricity generators and aluminium producers if a carbon tax is introduced
+q49_2,I would support a carbon tax as long as there was a corresponding reduction in GST (Goods and Services Tax)
+q49_3,A carbon tax is a good idea as long as low and middle income earners are fully compensated
+q49_4,I would support a carbon tax as long as there was a corresponding reduction in Income Tax
+q49_5,I understand what an ETS (emissions trading scheme) is
+q49_6,I understand what a carbon tax is
+q50,"For climate change, where would you place yourself?"
+q57_1,Adults (18+ years)
+q57_2,Children (15 years and under)
+q57_3,Children (16 - 18 years)
+Gender,Are you male or female?
+Education,What is the highest level of education you have attained?
+q62,Which of the following best describes the area in which you live?
+q62_other,Other (please specify)
+q64,Which state or territory do you live in?
+q66,What is your current employment status?
+q67,What is your household's gross annual income before tax?
+Religion,Which of the following best describes your religion?
+Belief1,Certainty global warming is occurring (9 point scale)
+Belief2,Human causation
+Time_Taken,NA
+Time_cat,NA
+Belief3,NA
+Belief4,NA
+Belief5,NA
+Belief6,NA
+Belief7,NA
+Belief8,NA
+Belief9,NA
+Belief10,NA
+Belief11,Perceived impact of own mitigation actions
+Belief12,NA
+Belief13,NA
+Inv14,NA
+Inv15,NA
+Inv16,NA
+Inv17,NA
+Inv18,Personal importance of issue
+Inv19,NA
+Inv20,NA
+Inv21,NA
+Inv22,NA
+Behaviour23,NA
+Behaviour24,NA
+Behaviour25,NA
+Behaviour26,NA
+Behaviour27,NA
+Behaviour28,NA
+Behaviour29,NA
+Behaviour30,NA
+Behaviour31,NA
+PSR32,NA
+PSR33,NA
+PSR34,NA
+PSR35,Desired Australian Efforts to Reduce Warming Given Associated Costs
+PSR36,Contingent International Conditions for Australian Mitigation Action
+LG6_Final_missing,Six Australia's Segmentation Variable
+Income,NA
+Cautious,NA
+q16a,NA
+q16b,NA
+q16c,NA
+q16d,NA
+q16e,NA
+q16f,NA
+q16g,NA
+q16h,NA
+TestResult,NA
+Religion_reduced,NA
+Religion_final,NA
+q69_other,Other (please specify)
+Eco_crisis,Eco-crisis (Factor score)
+Human_ingenuity,Human ingenuity (Factor score)
+Human_rule,Human rule (Factor score)
+Earth_limits,Earth limits (Factor score)
+Buddhist,NA
+Athiest_Agnostic,NA
+Jewish,NA
+Hindu,NA
+Muslim,NA
+Income2,NA
+HR_AA,NA
+HR_Buddhist,NA
+Children,NA
+Have_children,NA
+Children_under15,NA
+Retirees,NA
+Full_time_employed,NA
+Self_employed,NA
+Student,NA
+Unemployed,NA
+Part_time_employed,NA
+Capital_City,NA
+Regional_town,NA
+Rural_area,NA
+Religion_new,NA
+Belief2R,Human causation
+Scientific_Consensus,NA
+Human_caused,NA
+Christian_literal,NA
+Christian_non_literal,NA
+HR_Christian_non_literal,NA
+HR_Christian_Literal,NA
+Age_recoded,NA

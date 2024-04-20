@@ -1,7 +1,8 @@
 install.packages("tidyverse")
 install.packages("janitor")
 library(tidyverse)
-library(janitor)items <- read.csv("items.csv")
+library(janitor)
+items <- read.csv("items.csv")
 setwd("~/DF24")
 responses <- read.csv("responses.csv")
 
@@ -28,19 +29,33 @@ c(mcq_marks_ABCD, mcq_marks_ABC)
 responses$book %>% unique()
 
 responses %>%
-  filter(item_type != "code") %>%
   select(book, points_earned, points_possible, item_type, review_flag, chapter_number) %>% 
   mutate(item_type = if_else(item_type == "learnosity-activity", "learnosity", item_type)) %>% 
-  group_by(book, item_type, review_flag, chapter_number) %>% 
+  group_by(book, review_flag, chapter_number) %>% 
   summarise(average_points = sum(points_earned, na.rm = TRUE)/sum(points_possible, na.rm = TRUE)) %>% 
   ggplot() +
     geom_line(aes(x = chapter_number, y = average_points, colour = review_flag)) +
     facet_wrap(~book) +
-    theme_classic() +
+    theme_bw() +
     scale_x_continuous(breaks = seq(min(responses$chapter_number, na.rm = TRUE), max(responses$chapter_number, na.rm = TRUE), by = 1)) +
     labs(x = "Chapter Number", y = "Average points (%)")
 
+# Angus' saturday morning modification
+responses %>%
+  select(points_earned, points_possible, review_flag, chapter_number) %>% 
+  group_by(review_flag, chapter_number) %>% 
+  summarise(average_points = sum(points_earned, na.rm = TRUE)/sum(points_possible, na.rm = TRUE)) %>% 
+  filter(chapter_number<=9) %>% 
+  pivot_wider(names_from = review_flag, values_from = average_points) %>% 
+  mutate(difference = `TRUE` - `FALSE`) %>% 
+  select(chapter_number, difference) %>% 
+  ggplot() +
+  geom_col(aes(x = chapter_number, y = difference)) +
+  theme_bw() +
+  scale_x_continuous(breaks = seq(min(responses$chapter_number, na.rm = TRUE), max(responses$chapter_number, na.rm = TRUE), by = 1)) +
+  labs(x = "Chapter number", y = "Increase in score in review questions (%)")
 
+page_views <- read_csv("page_views.csv")
 # responses %>% 
 #   select(item_type, prompt, response, points_possible, points_earned) %>% 
 #   #filter(item_type == "code", !(prompt == response)) %>%

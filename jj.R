@@ -53,7 +53,7 @@ responses %>%
   geom_col(aes(x = chapter_number, y = difference)) +
   theme_bw() +
   scale_x_continuous(breaks = seq(min(responses$chapter_number, na.rm = TRUE), max(responses$chapter_number, na.rm = TRUE), by = 1)) +
-  labs(x = "Chapter Number", y = "Increase in score in review questions (%)")
+  labs(x = "Chapter number", y = "Increase in score in review questions (%)")
 
 
 # responses %>% 

@@ -42,3 +42,11 @@ checkpoints_eoc %>%
   ggplot() +
   geom_line(aes(x=chapter_number, y=average_eoc, colour=decile))
 
+# page view time for chapter 7 and 9 by section
+
+
+
+
+
+
+

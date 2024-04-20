@@ -6,8 +6,11 @@ format: revealjs
 
 ```{r setup, cache = TRUE}
 library(tidyverse)
+library(ggpmisc)
 setwd("C:/Users/sailo/Documents/University/Datafest/drive-download-20240419T003834Z-001/full_03_04")
 responses <- read_csv("responses.csv")
+views_eoc <- read_csv("page_views.csv")
+checkpoints_eoc <- read_csv("checkpoints_eoc.csv")
 ```
 
 ## Executive summary (update pls)
@@ -81,6 +84,29 @@ checkpoints_eoc %>%
   
 ## Time spent on each chapter
 
+```{r median_engaged}
+views_eoc <- inner_join(page_views,checkpoints_eoc,by=c("student_id", "chapter_number", "book")) %>% 
+  select(book,chapter_number,section_number,engaged,off_page_brief, student_id,EOC) %>% 
+  filter(book=="College / Statistics and Data Science (ABC)") 
+  
+average_eoc <- stats::aggregate(EOC~chapter_number,views_eoc,median) #average EOC
+
+average_engage <- stats::aggregate(engaged~chapter_number,views_eoc,median)
+
+ggplot() +
+  geom_col(data = average_engage, mapping = aes(x = as.factor(chapter_number), 
+                                             y=engaged),
+           colour="black",fill="lightblue",alpha=0.7)+
+  geom_line(data = average_eoc, mapping = aes(x=chapter_number, y=EOC*200000),
+            colour="blue")+
+  labs(y="Median EOC")+
+  scale_y_continuous(
+    name="Median Engagement (milliseconds)",
+    sec.axis=sec_axis(~.*(1/200000),name="Median EOC"))+
+  labs(x="Chapter Number",title="Engagement vs EOC for College/Statistics and Data Science (ABC)")
+
+```
+
 ## Do students realise what they fail to learn?
 
 - Hannah's boxplot graph of survey results for each chapter
@@ -116,4 +142,8 @@ responses %>%
 ```
 
 
-## 
+## Performance by question type
+
+```{r question_type_avg_points}
+
+```

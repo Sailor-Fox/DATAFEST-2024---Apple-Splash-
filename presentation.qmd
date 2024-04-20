@@ -4,23 +4,52 @@ author: "Golden Pash"
 format: revealjs
 ---
 
-## Quarto
-
-Quarto enables you to weave together content and executable code into a finished presentation. To learn more about Quarto presentations see <https://quarto.org/docs/presentations/>.
-
-## Bullets
-
-When you click the **Render** button a document will be generated that includes:
-
--   Content authored with markdown
--   Output from executable code
-
-## Code
-
-When you click the **Render** button a presentation will be generated that includes both content and the output of embedded code. You can embed code like this:
-
-```{r}
-1 + 1
+```{r setup, cache = TRUE}
+library(tidyverse)
+setwd("C:/Users/sailo/Documents/University/Datafest/drive-download-20240419T003834Z-001/full_03_04")
+responses <- read_csv("responses.csv")
 ```
 
+## Executive summary (update pls)
 
+- Something goes here
+
+## Looking at grades throughout book
+
+- Grades decrease throughout the book overtime
+
+```{r boxplot_of_eoc_by_chapter}
+
+```
+
+## Do students realise what they fail to learn?
+
+- Hannah's boxplot graph of survey results for each chapter
+  - Remains consistent;y positive for all chapters
+- But the boxplot graph of EOC shows decreasing results towards the later chapters
+
+## Review question performance
+
+- Review questions are done at the end of each chapter
+- We hypothesised that they would be done better then the non-review questions (which are when the students have only just learnt the content).
+```{r review_graph}
+responses %>%
+  select(points_earned, points_possible, review_flag, chapter_number) %>% 
+  group_by(review_flag, chapter_number) %>% 
+  summarise(average_points = sum(points_earned, na.rm = TRUE)/sum(points_possible, na.rm = TRUE)) %>% 
+  filter(chapter_number<=9) %>% 
+  pivot_wider(names_from = review_flag, values_from = average_points) %>% 
+  mutate(difference = `TRUE` - `FALSE`) %>% 
+  select(chapter_number, difference) %>% 
+  ggplot() +
+  geom_col(aes(x = chapter_number, y = difference)) +
+  theme_bw() +
+  scale_x_continuous(breaks = seq(min(responses$chapter_number, na.rm = TRUE), max(responses$chapter_number, na.rm = TRUE), by = 1)) +
+  labs(x = "Chapter number", y = "Increase in score in review questions (%)")
+```
+
+## Trying to expain poor review performance
+
+- Do students spend less time on the later review pages trying to speed through it?
+
+## 

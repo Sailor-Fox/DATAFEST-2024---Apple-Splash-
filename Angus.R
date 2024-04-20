@@ -13,3 +13,31 @@ responses %>%
   ggplot(aes(x = item_id, y = average_points, colour = item_type)) +
   geom_point()
 
+
+# LOOKING AT HOW THE BOTTOM PPL AFTER CHAPTER ONE PERFORMS OVER TIME
+
+checkpoints_eoc <- read_csv("checkpoints_eoc.csv")
+
+sorted_data <- checkpoints_eoc %>% 
+  filter(chapter_number==1) %>% 
+  arrange(EOC)
+bottom_index <- round(0.1 * nrow(sorted_data))
+top_index <- round(0.9 * nrow(sorted_data))
+bottom_decile <- sorted_data %>% 
+  slice(1:bottom_index) %>%
+  pull(student_id)
+median_decile <- sorted_data %>% 
+  slice(round(0.45 * nrow(sorted_data)):round(0.55 * nrow(sorted_data))) %>%
+  pull(student_id)
+top_decile <- sorted_data %>% 
+  slice((top_index + 1):nrow(sorted_data)) %>%
+  pull(student_id)
+checkpoints_eoc %>% 
+  mutate(decile = if_else(student_id %in% bottom_decile, "bottom", if_else(student_id %in% top_decile, "top", if_else(student_id %in% median_decile, "med", NA)))) %>% 
+  select(chapter_number, EOC, decile) %>% 
+  filter(!is.na(decile)) %>% 
+  group_by(chapter_number, decile) %>% 
+  summarise(average_eoc = mean(EOC, na.rm=TRUE)) %>% 
+  ungroup() %>% 
+  ggplot() +
+  geom_line(aes(x=chapter_number, y=average_eoc, colour=decile))

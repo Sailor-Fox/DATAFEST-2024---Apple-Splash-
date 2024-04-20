@@ -1,0 +1,120 @@
+---
+title: "Textbook Questions"
+author: "Jonathan Chang"
+format: revealjs
+editor: visual
+---
+
+## Part 1: Effective Question Types
+
+```{r setup, echo = FALSE}
+library(tidyverse)
+library(janitor)
+library(palmerpenguins)
+setwd("~/DF24")
+jj_responses <- read.csv("responses.csv")
+
+```
+
+::: columns
+::: {.column width="65%"}
+```{r graph1, fig.height=10, fig.width=12, fig.align='left'}
+jj_responses %>%
+  select(points_earned, points_possible, lrn_type, chapter_number) %>% 
+  group_by(lrn_type) %>% 
+  filter(!is.na(points_earned)) %>% 
+  summarise(average_points = sum(points_earned, na.rm = TRUE)/sum(points_possible, na.rm = TRUE)) %>%
+  mutate(lrn_type = if_else(is.na(lrn_type), "Code", lrn_type)) %>% 
+  ggplot() +
+    geom_col(aes(x = reorder(lrn_type, +average_points), y = average_points, fill = reorder(lrn_type, +average_points))) + 
+    labs(x="Question type", y="Average Points (%)") + 
+    scale_x_discrete(labels = c("Choice\nMatrix", "Short\nText", "Sort\nList", "Image\nclose\nAssociation", "R Code", "Multi\nChoice\nQs", "Close\nAssoc.", "Formulae", "Assoc.", "Plain\nText")) +
+    scale_y_continuous(breaks = seq(0, 1, by = 0.1)) +
+    scale_fill_manual(values=c("red","#636363","red","red","red","#636363","#636363","red","#636363","cyan"), guide = "none") + 
+    theme(axis.text = element_text(size = 20), axis.title = element_text(size = 36))
+```
+:::
+
+::: {.column width="35%"}
+-   Null responses for red columns
+-   Question Grading
+    -   Choice Matrix
+    -   Plain Text
+:::
+:::
+
+------------------------------------------------------------------------
+
+::: columns
+::: {.column width="50%"}
+![](fig2.png) ![](fig4.png)
+:::
+
+::: {.column width="50%"}
+```{r fig3, fig.height=10, fig.width=9}
+q_type <- c("choice matrix", "sort list", "image association", "code", "Formula")
+null_percent <- c(443/6667 *100, 192/1311 *100, 70/2384 *100, 13232/383174 *100, 5/389 *100)
+null_answer_percent <- as_tibble(q_type, null_percent)
+null_answer_percent %>% 
+  ggplot() +
+  geom_col(aes(x = as_factor(q_type), y = null_percent, fill = q_type)) + 
+  labs(x = "Question Type", y = "Empty answers (%)") + 
+  scale_x_discrete(labels = c("Choice\nMatrix", "Sort\nList", "Assoc.", "R Code", "Formulae")) +
+  scale_fill_manual(values=c("red","red","red","red","red"), guide = "none") +
+  theme(axis.text = element_text(size = 24), axis.title = element_text(size = 36))
+```
+:::
+:::
+
+## Part 2: Poorly Done Sections
+
+::: columns
+::: {.column width="50%"}
+```{r fig4, fig.height=10, fig.width=12}
+jj_responses %>% 
+  filter(lrn_type != "plaintext", !is.na(points_earned), !is.na(points_possible)) %>% 
+  group_by(chapter_number, section_number, review_flag) %>% 
+  summarise(ave = sum(points_earned)/sum(points_possible)) %>% 
+  mutate(parts = paste0(as.character(chapter_number), ".", as.character(section_number))) %>%
+  ungroup() %>% 
+  filter(ave <= 0.45) %>% 
+  select(chapter_number, parts, ave, review_flag) %>%
+  mutate(colour_flag = if_else(chapter_number > 13, TRUE, FALSE)) %>% 
+  ggplot() +
+  geom_col(aes(x = factor(reorder(parts, +ave)), y = ave, fill = colour_flag)) +
+  theme(axis.text.x = element_text(angle = 90)) +
+  scale_y_continuous(breaks = seq(0, 1, by = 0.1)) +
+  labs(x = "Chapter & Section", y = "Average Mark (%)") +
+  scale_fill_discrete(guide = "none") + 
+  theme(axis.text = element_text(size = 20), axis.title = element_text(size = 36))
+```
+:::
+
+::: {.column width="50%"}
+::: {style="font-size: 25px"}
+::: {style="color: #F8766D"}
+Chapters 1-10, \< 45% average points
+
+-   The Concept of Distribution
+
+-   Shape, Center, Spread, and Weird Things
+
+-   Exploring the Mean
+
+-   Mathematical Notation
+
+-   Partitioning Sums of Squares
+
+-   The Empirical Rule
+
+-   Sampling Distribution
+:::
+
+::: {style="color: #02BFC4"}
+Chapters 11-16
+
+-   55% overall compared to 66% of chapters 1-10
+:::
+:::
+:::
+:::

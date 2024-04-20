@@ -55,7 +55,7 @@ responses %>%
   scale_x_continuous(breaks = seq(min(responses$chapter_number, na.rm = TRUE), max(responses$chapter_number, na.rm = TRUE), by = 1)) +
   labs(x = "Chapter number", y = "Increase in score in review questions (%)")
 
-
+page_views <- read_csv("page_views.csv")
 # responses %>% 
 #   select(item_type, prompt, response, points_possible, points_earned) %>% 
 #   #filter(item_type == "code", !(prompt == response)) %>%

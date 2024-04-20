@@ -40,6 +40,21 @@ responses %>%
     scale_x_continuous(breaks = seq(min(responses$chapter_number, na.rm = TRUE), max(responses$chapter_number, na.rm = TRUE), by = 1)) +
     labs(x = "Chapter Number", y = "Average points (%)")
 
+# Angus' saturday morning modification
+responses %>%
+  select(points_earned, points_possible, review_flag, chapter_number) %>% 
+  group_by(review_flag, chapter_number) %>% 
+  summarise(average_points = sum(points_earned, na.rm = TRUE)/sum(points_possible, na.rm = TRUE)) %>% 
+  filter(chapter_number<=9) %>% 
+  pivot_wider(names_from = review_flag, values_from = average_points) %>% 
+  mutate(difference = `TRUE` - `FALSE`) %>% 
+  select(chapter_number, difference) %>% 
+  ggplot() +
+  geom_col(aes(x = chapter_number, y = difference)) +
+  theme_bw() +
+  scale_x_continuous(breaks = seq(min(responses$chapter_number, na.rm = TRUE), max(responses$chapter_number, na.rm = TRUE), by = 1)) +
+  labs(x = "Chapter Number", y = "Increase in score in review questions (%)")
+
 
 # responses %>% 
 #   select(item_type, prompt, response, points_possible, points_earned) %>% 

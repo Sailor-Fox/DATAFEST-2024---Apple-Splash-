@@ -16,11 +16,70 @@ responses <- read_csv("responses.csv")
 
 ## Looking at grades throughout book
 
-- Grades decrease throughout the book overtime
+- Grades decrease throughout the book chapters
 
 ```{r boxplot_of_eoc_by_chapter}
-
+checkpoints_eoc %>%
+  ggplot(aes(x=reorder(as.character(chapter_number), as.numeric(chapter_number)), y=EOC)) +
+  geom_boxplot() +
+  labs(title = "EOC statistics by chapter", x="chapter", y="EOC") +
+  scale_x_discrete()
 ```
+
+- This is true not just for the interquartile range of students but also the top and bottom 1%
+  - It is not just the low end of students dragging down the statistics
+  
+```{r eoc_percentiles}
+# Sort the data by EOC
+sorted_data <- checkpoints_eoc %>% 
+  filter(chapter_number == 1) %>% 
+  arrange(EOC)
+
+# Calculate indices for percentiles
+bottom_index <- round(0.01 * nrow(sorted_data))
+top_index <- round(0.99 * nrow(sorted_data))
+median_index <- round(0.5 * nrow(sorted_data))
+
+# Extract student_ids for each percentile
+bottom_decile <- sorted_data %>% 
+  slice(1:bottom_index) %>%
+  pull(student_id)
+
+top_decile <- sorted_data %>% 
+  slice((top_index + 1):nrow(sorted_data)) %>%
+  pull(student_id)
+
+median_decile <- sorted_data %>% 
+  slice(round(0.495 * nrow(sorted_data)):round(0.505 * nrow(sorted_data))) %>%
+  pull(student_id)
+
+# Create the percentile column
+checkpoints_eoc <- checkpoints_eoc %>% 
+  mutate(percentile = case_when(
+    student_id %in% bottom_decile ~ "bottom",
+    student_id %in% top_decile ~ "top",
+    student_id %in% median_decile ~ "middle",
+    TRUE ~ NA_character_
+  )) 
+checkpoints_eoc$percentile <- factor(checkpoints_eoc$percentile, levels = c("top", "middle", "bottom"))
+
+# Plotting
+checkpoints_eoc %>% 
+  filter(!is.na(percentile)) %>% 
+  group_by(chapter_number, percentile) %>% 
+  summarise(average_eoc = mean(EOC, na.rm = TRUE)) %>% 
+  ungroup() %>% 
+  ggplot() +
+  geom_line(aes(x = chapter_number, y = average_eoc, colour = percentile, linetype = percentile)) +
+  scale_colour_manual(values = c("top" = "blue", "bottom" = "red", "middle" = "black")) +
+  scale_linetype_manual(values = c("top" = "solid", "bottom" = "solid", "middle" = "dashed")) +
+  guides(colour = guide_legend(override.aes = list(title = "Percentile")))
+```
+
+- We additionally see that chapter 11 has an abnormal dip in grade
+  - Abnormal dip = below the trend of decreasing grade as students progress to later (harder) chapters
+  
+## Time spent on each chapter
 
 ## Do students realise what they fail to learn?
 
@@ -36,7 +95,7 @@ responses <- read_csv("responses.csv")
 responses %>%
   select(points_earned, points_possible, review_flag, chapter_number) %>% 
   group_by(review_flag, chapter_number) %>% 
-  summarise(average_points = sum(points_earned, na.rm = TRUE)/sum(points_possible, na.rm = TRUE)) %>% 
+  summarise(average_points = sum(points_earned, na.rm = TRUE)/sum(points_possible, na.rm = TRUE)) %>%
   filter(chapter_number<=9) %>% 
   pivot_wider(names_from = review_flag, values_from = average_points) %>% 
   mutate(difference = `TRUE` - `FALSE`) %>% 
@@ -51,5 +110,10 @@ responses %>%
 ## Trying to expain poor review performance
 
 - Do students spend less time on the later review pages trying to speed through it?
+
+```{r heatmap_by_review_or_not_page}
+# will show if they start spending way less time on the review
+```
+
 
 ## 

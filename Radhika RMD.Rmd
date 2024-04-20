@@ -1,0 +1,217 @@
+---
+title: "Radhika"
+author: "Radhika Valanju"
+date: "2024-04-19"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r checkpointeoc, warning = FALSE}
+#ranking books by total number of questions
+groupedbybook <- checkpoints_eoc %>%
+  group_by(book) %>%
+  summarise(total_questions = sum(n_possible),
+            total_correct = sum(n_correct),
+            total_attempts = sum(n_attempt))
+
+pivot_longer(groupedbybook, cols = 2:4, names_to = "type_of_question", values_to = "total") %>%
+  ggplot(aes(x = book, y = total, fill = type_of_question)) +
+           geom_col(position = "dodge") +
+  theme(axis.text.x = element_text(angle = 5)) +
+  labs(title = "Total no. of questions, attempts and correct answers by book", x = "book", y = "count")
+
+#statistics for EOC by book 
+summaryofeocbybook <- checkpoints_eoc %>%
+  group_by(book) %>%
+  filter(!is.na(EOC)) %>%
+  summarise(mean = mean(EOC),
+            median = median(EOC),
+            min = min(EOC),
+            max = max(EOC),
+            sd = sd(EOC))
+
+#graph for EOC by book (facet wrapped) and chapter
+checkpoints_eoc %>%
+  ggplot(aes(x=reorder(as.character(chapter_number), as.numeric(chapter_number)), y=EOC)) +
+  geom_boxplot() +
+  facet_wrap(~book) +
+  labs(title = "EOC statistics by chapter, faceted by book", x="chapter", y="EOC") +
+  scale_x_discrete()
+
+#frequency and distribution of EOC by book
+checkpoints_eoc %>%
+  ggplot() + 
+  geom_histogram(aes(EOC)) +
+  facet_wrap(~book) +
+  labs(title = "frequency of EOC by book", x = "EOC", y = "count")
+
+#density graphs for EOC by book
+checkpoints_eoc %>%
+  ggplot() +
+  geom_density(aes(EOC)) +
+  facet_wrap(~book) +
+  labs(title = "density of EOC by book", x = "EOC", y = "density")
+
+#statistics for EOC by chapter within each book
+summaryofeocbybook <- checkpoints_eoc %>%
+  filter(book == "College / Advanced Statistics and Data Science (ABCD)") %>%
+  group_by(chapter_number) %>%
+  filter(!is.na(EOC)) %>%
+  summarise(mean = mean(EOC),
+            median = median(EOC),
+            min = min(EOC),
+            max = max(EOC),
+            sd = sd(EOC))
+
+summaryofeocbybook <- checkpoints_eoc %>%
+  filter(book == "College / Statistics and Data Science (ABC)") %>%
+  group_by(chapter_number) %>%
+  filter(!is.na(EOC)) %>%
+  summarise(mean = mean(EOC),
+            median = median(EOC),
+            min = min(EOC),
+            max = max(EOC),
+            sd = sd(EOC))
+
+summaryofeocbybook <- checkpoints_eoc %>%
+  filter(book == "High School / Advanced Statistics and Data Science I (ABC)") %>%
+  group_by(chapter_number) %>%
+  filter(!is.na(EOC)) %>%
+  summarise(mean = mean(EOC),
+            median = median(EOC),
+            min = min(EOC),
+            max = max(EOC),
+            sd = sd(EOC))
+
+
+#frequency and distriution of EOC by chapter within each book
+#which chapter is the worst!!!!
+p1 <- checkpoints_eoc %>%
+  filter(book == "High School / Advanced Statistics and Data Science I (ABC)") %>%
+  ggplot() +
+  geom_histogram(aes(EOC)) +
+  facet_wrap(~chapter_number) +
+  theme(axis.text.x = element_text(angle = 90))
+
+p2 <- checkpoints_eoc %>%
+  filter(book == "College / Advanced Statistics and Data Science (ABCD)") %>%
+  ggplot() +
+  geom_histogram(aes(EOC)) +
+  facet_wrap(~chapter_number) +
+  theme(axis.text.x = element_text(angle = 90))
+
+p3 <- checkpoints_eoc %>%
+  filter(book == "College / Statistics and Data Science (ABC)") %>%
+  ggplot() +
+  geom_histogram(aes(EOC)) +
+  facet_wrap(~chapter_number) +
+  theme(axis.text.x = element_text(angle = 90))
+
+p1 + p2 + p3
+
+#EOC by class ID and book
+groupedbyclassid <- checkpoints_eoc %>%
+  filter(book == "College / Statistics and Data Science (ABC)") %>%
+  group_by(class_id, chapter_number) %>%
+  summarise(eoc = mean(EOC))
+
+q1 <- ggplot(groupedbyclassid, aes(x=reorder(as.character(chapter_number), as.numeric(chapter_number)), y = eoc)) +
+  geom_col(position = "dodge")+
+  facet_wrap(~class_id) +
+  labs(title = "avg EOC for each chapter by class for College/Stats", x="chapter", y="eoc") +
+  theme(axis.text.x = element_text(angle = 90))
+
+groupedbyclassid <- checkpoints_eoc %>%
+  filter(book == "High School / Advanced Statistics and Data Science I (ABC)") %>%
+  group_by(class_id, chapter_number) %>%
+  summarise(eoc = mean(EOC))
+
+q2 <- ggplot(groupedbyclassid, aes(x=reorder(as.character(chapter_number), as.numeric(chapter_number)), y = eoc)) +
+  geom_col(position = "dodge")+
+  facet_wrap(~class_id) +
+  labs(title = "avg EOC for each chapter by class for HS/Adv", x="chapter", y="eoc") +
+  theme(axis.text.x = element_text(angle = 90))
+
+groupedbyclassid <- checkpoints_eoc %>%
+  filter(book == "College / Advanced Statistics and Data Science (ABCD)") %>%
+  group_by(class_id, chapter_number) %>%
+  summarise(eoc = mean(EOC))
+
+q3 <- ggplot(groupedbyclassid, aes(x=reorder(as.character(chapter_number), as.numeric(chapter_number)), y = eoc)) +
+  geom_col(position = "dodge")+
+  facet_wrap(~class_id) +
+  labs(title = "avg EOC for each chapter by class for College/Adv Stat", x="chapter", y="eoc") +
+  theme(axis.text.x = element_text(angle = 90))
+
+q1 + q2 + q3
+```
+
+```{r joiningpulseandeoc , echo=FALSE, cache=FALSE}
+# checkpoints_pulse_filtered <- checkpoints_pulse %>%
+#   filter(!is.na(response)) %>%
+#   select(book, chapter_number, student_id, construct, response)
+# 
+# checkpoints_eoc_filtered <- checkpoints_eoc %>%
+#   filter(!is.na(EOC)) %>%
+#   select(book, chapter_number, student_id, EOC)
+# 
+# joinedtable <- left_join(checkpoints_pulse_filtered, checkpoints_eoc_filtered, by = c("student_id", "chapter_number", "book"), na_matches = "never")
+
+#graphing
+# data <- joinedtable %>%
+#   group_by(book, chapter_number, construct)
+# 
+# lmTestObject <- lm(response ~ EOC, data)
+# 
+# lineargraph <- data %>%
+#     ggplot(aes(x = response, y = EOC)) +
+#     geom_abline(slope = lmTestObject$coefficients[2], intercept = lmTestObject$coefficients[2]) +
+#     labs(title = "Scatter plot of Y vs X", x = "X", y = "Y") +
+#     facet_wrap(~chapter_number)
+# 
+# lineargraph
+```
+
+
+```{r pageviews, echo=FALSE}
+#engagement by chapter and time spent
+pageviewsbychapter1 <- page_views %>%
+  mutate(date = substr(dt_accessed, start = 1, stop = 10)) %>%
+  mutate(weekday = weekdays(as.Date(date))) %>%
+  filter(!is.na(chapter_number)) %>%
+  filter(!is.na(engaged)) %>%
+  select(student_id, chapter_number, engaged) %>%
+  mutate(interval = round(engaged/600000, 0)) %>%
+  group_by(chapter_number, student_id) %>%
+  mutate(time = sum(interval)) %>%
+  filter(time<36) %>%
+  select(student_id, chapter_number, time) %>%
+  distinct() %>%
+  mutate(count = 1) %>%
+  select(student_id, chapter_number, count, time)
+
+table1 <- pageviewsbychapter1[order(pageviewsbychapter1$chapter_number, pageviewsbychapter1$time), ] %>%
+  group_by(chapter_number, time) %>%
+  summarise(N = sum(count), .groups="keep")
+
+ggplot(table1, aes(chapter_number, time)) +
+  geom_tile(aes(fill = N), colour = "grey", na.rm = TRUE) +
+  scale_fill_gradient(low="white", high="blue") +
+  guides(fill=guide_legend(title="Total students")) +
+  labs(title = "Heat map of students by chapter and 10-min intervals",
+       x = "Chapter number",
+       y = "10-Minute intervals") +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
+  scale_x_continuous(breaks = seq(min(table1$chapter_number, na.rm = TRUE), max(table1$chapter_number, na.rm = TRUE), by = 1)) +
+  scale_y_continuous(breaks = seq(min(table1$time, na.rm = TRUE), max(table1$time, na.rm = TRUE), by = 1))
+
+#engagement by 
+
+#section, weekdays + patchwork!!!
+
+#wday is hour, N = total unique students, hour = chapter_number
+```
+

@@ -21,13 +21,13 @@ checkpoints_eoc <- read_csv("checkpoints_eoc.csv")
 sorted_data <- checkpoints_eoc %>% 
   filter(chapter_number==1) %>% 
   arrange(EOC)
-bottom_index <- round(0.1 * nrow(sorted_data))
-top_index <- round(0.9 * nrow(sorted_data))
+bottom_index <- round(0.01 * nrow(sorted_data))
+top_index <- round(0.99 * nrow(sorted_data))
 bottom_decile <- sorted_data %>% 
   slice(1:bottom_index) %>%
   pull(student_id)
 median_decile <- sorted_data %>% 
-  slice(round(0.45 * nrow(sorted_data)):round(0.55 * nrow(sorted_data))) %>%
+  slice(round(0.495 * nrow(sorted_data)):round(0.505 * nrow(sorted_data))) %>%
   pull(student_id)
 top_decile <- sorted_data %>% 
   slice((top_index + 1):nrow(sorted_data)) %>%
@@ -41,3 +41,4 @@ checkpoints_eoc %>%
   ungroup() %>% 
   ggplot() +
   geom_line(aes(x=chapter_number, y=average_eoc, colour=decile))
+

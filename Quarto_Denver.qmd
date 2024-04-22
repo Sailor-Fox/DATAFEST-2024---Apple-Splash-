@@ -1,0 +1,205 @@
+---
+title: "Quarto_Denver"
+format: revealjs
+editor: visual
+execute: 
+  cache: true
+---
+
+```{r setup}
+library(tidyverse)
+library(magrittr)
+media_views <- read_csv("media_views.csv")
+page_views <- read_csv("page_views.csv")
+```
+
+## Video Effectiveness
+
+Videos are not highly effective in driving engagement
+
+```{r video_distractions}
+media_views %>%
+  drop_na(proportion_video) %>%
+  group_by(media_id, book) %>%
+  count(page, Engaged = proportion_time > 0.8) %>%
+  mutate(media_id = case_when(
+    media_id == "379060892" ~ "Ch4 S2 Video 1",
+    media_id == "379150092" ~ "Ch5 S9 Video 2",
+    media_id == "379319375" ~ "Ch4 S2 Video 2",
+    media_id == "379319558" ~ "Ch5 S9 Video 1",
+    media_id == "381974697" ~ "Ch4 S4",
+    TRUE ~ as.character(media_id)
+  )) %>%
+  mutate(book = case_when(
+    book == "College / Statistics and Data Science (ABC)" ~ "College Standard",
+    book == "College / Advanced Statistics and Data Science (ABCD)" ~ "College Advanced",
+    book == "High School / Advanced Statistics and Data Science I (ABC)" ~ "High School",
+    TRUE ~ as.character(book)
+    )) %>%
+  ggplot(mapping = aes(
+        x = format(media_id),
+        y = n,
+        fill = Engaged)) +
+      geom_bar(stat = "identity") +
+      facet_wrap(~book, scales = "free") +
+      theme(axis.text.x = element_text(angle = 35, hjust = 1)) +
+      xlab("Video") +
+      ylab("Number of Students") +
+      ggtitle("Number of Students Engaged With Videos") +
+      theme(plot.title = element_text(hjust = 0.5)) +
+      scale_fill_discrete(name = "Engaged", labels = c("No", "Yes"))
+```
+
+::: notes
+Insights and Recommendations
+
+-   Students are only somewhat engaged
+-   Sample size is relatively small due to many NA values
+-   We recommend a better data collection process: Check how data is classified (if students don't interact with the video, put 0 instead of NA), add notes if NA on purpose
+-   Use checkpoints within each video to drive engagement
+:::
+
+---
+
+::: {style="color: #FFFFFF"}
+Chapters 11-16
+
+-   55% overall compared to 66% of chapters 1-10
+:::
+
+::: {layout-ncol="2"}
+![](Int_vid_1.png){width="70%"}
+
+![](Int_vid_2.png){width="70%"}
+:::
+
+---
+
+### Distraction Times
+```{r page_distractions_setup, echo=FALSE}
+distractions_by_section_abcd <- page_views %>% 
+  select(book, chapter_number, section_number, off_page_brief) %>% 
+  filter(book == "College / Advanced Statistics and Data Science (ABCD)",
+         chapter_number == c(3, 10, 12)) %>% 
+  filter(!is.na(off_page_brief)) %>% 
+  group_by(book, chapter_number, section_number) %>% 
+  summarise(mean = mean(off_page_brief)) %>% 
+  mutate(chapter_name = case_when(
+    chapter_number == 3 ~ "Chapter 3",
+    chapter_number == 10 ~ "Chapter 10",
+    chapter_number == 12 ~ "Chapter 12"
+  ))
+
+# Convert from milliseconds to seconds
+distractions_by_section_abcd$mean <- distractions_by_section_abcd$mean/1000
+
+# Adjustments to ensure chapters are in chronological order
+chapter_order <- c("Chapter 3", "Chapter 10", "Chapter 12")
+
+distractions_by_section_abcd <- distractions_by_section_abcd %>%
+  mutate(chapter_name = factor(chapter_name, levels = chapter_order))
+
+# Plotting
+p1 <- distractions_by_section_abcd %>% 
+  ggplot(mapping = aes(x = section_number, y = mean)) +
+  geom_bar(stat = "identity") +
+  facet_wrap(~chapter_name, scales = "free_x") +
+  scale_x_continuous(breaks = seq(min(distractions_by_section_abcd$section_number), 
+                                  max(distractions_by_section_abcd$section_number))) +
+  ggtitle("Average Distraction Time Per Section
+      for College / Advanced Statistics and Data Science (ABCD)") +
+  xlab("Section Number") +
+  ylab("Mean Distraction Time (Seconds)") +
+  theme(plot.title = element_text(hjust = 0.5))
+  
+
+# Distractions Per Section by Chapters of Concern for College ABC ---------
+
+distractions_by_section_abc <- page_views %>% 
+  select(book, chapter_number, section_number, off_page_brief) %>% 
+  filter(book == "College / Statistics and Data Science (ABC)",
+         chapter_number == c(11, 12, 13)) %>% 
+  filter(!is.na(off_page_brief)) %>% 
+  group_by(book, chapter_number, section_number) %>% 
+  summarise(mean = mean(off_page_brief)) %>% 
+  mutate(chapter_name = case_when(
+    chapter_number == 11 ~ "Chapter 11",
+    chapter_number == 12 ~ "Chapter 12",
+    chapter_number == 13 ~ "Chapter 13"
+  ))
+
+# Convert from milliseconds to seconds
+distractions_by_section_abc$mean <- distractions_by_section_abc$mean/1000
+
+# Adjustments to ensure chapters are in chronological order
+chapter_order <- c("Chapter 11", "Chapter 12", "Chapter 13")
+
+distractions_by_section_abc <- distractions_by_section_abc %>%
+  mutate(chapter_name = factor(chapter_name, levels = chapter_order))
+
+# Plotting
+p2 <- distractions_by_section_abc %>% 
+  ggplot(mapping = aes(x = section_number, y = mean)) +
+  geom_bar(stat = "identity") +
+  facet_wrap(~chapter_name, scales = "free_x") +
+  scale_x_continuous(breaks = seq(min(distractions_by_section_abc$section_number), 
+                                  max(distractions_by_section_abc$section_number))) +
+  ggtitle("Average Distraction Time Per Section
+      for College / Statistics and Data Science (ABC)") +
+  xlab("Section Number") +
+  ylab("Mean Distraction Time (Seconds)") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+
+# Distractions Per Section for Chapters of Concern for High School --------
+
+distractions_by_section_hs <- page_views %>% 
+  select(book, chapter_number, section_number, off_page_brief) %>% 
+  filter(book == "High School / Advanced Statistics and Data Science I (ABC)",
+         chapter_number == c(3, 4, 10)) %>% 
+  filter(!is.na(off_page_brief)) %>% 
+  group_by(book, chapter_number, section_number) %>% 
+  summarise(mean = mean(off_page_brief)) %>% 
+  mutate(chapter_name = case_when(
+    chapter_number == 3 ~ "Chapter 3",
+    chapter_number == 4 ~ "Chapter 4",
+    chapter_number == 10 ~ "Chapter 10"
+  ))
+
+# Convert from milliseconds to seconds
+distractions_by_section_hs$mean <- distractions_by_section_hs$mean/1000
+
+# Adjustments to ensure chapters are in chronological order
+chapter_order <- c("Chapter 3", "Chapter 4", "Chapter 10")
+
+distractions_by_section_hs <- distractions_by_section_hs %>%
+  mutate(chapter_name = factor(chapter_name, levels = chapter_order))
+
+# Plotting
+p3 <- distractions_by_section_hs %>% 
+  ggplot(mapping = aes(x = section_number, y = mean)) +
+  geom_bar(stat = "identity") +
+  facet_wrap(~chapter_name, scales = "free_x") +
+  scale_x_continuous(breaks = seq(min(distractions_by_section_hs$section_number), 
+                                  max(distractions_by_section_hs$section_number))) +
+  ggtitle("Average Distraction Time Per Section
+      for High School / Advanced Statistics and Data Science I (ABC)") +
+  xlab("Section Number") +
+  ylab("Mean Distraction Time (Seconds)") +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r section_breakdown}
+library(patchwork)
+p1/p2
+```
+::: {.notes}
+Ch3 S2: Visualising Data with Histograms
+Ch10 S1: The Problem of Inference
+Ch12 S1: From Hypothesis Testing to Confidence Intervals
+:::
+
+
+
+
+

@@ -1,37 +1,65 @@
 ---
 title: "Datafest 2024"
 author: "Golden Pash"
-format: revealjs
+format: 
+  revealjs:
+    slide-number: true
+    self-contained: true
 ---
 
-```{r setup, cache = TRUE}
+![](https://139499046.cdn6.editmysite.com/uploads/1/3/9/4/139499046/s224273626885769831_p58_i3_w261.jpeg){width=10%}
+
+```{r setup}
 library(tidyverse)
 library(ggpmisc)
+library(janitor)
+library(magrittr)
+library(patchwork)
+library(tigris)
 setwd("C:/Users/sailo/Documents/University/Datafest/drive-download-20240419T003834Z-001/full_03_04")
 responses <- read_csv("responses.csv")
-views_eoc <- read_csv("page_views.csv")
+page_views <- read_csv("page_views.csv")
 checkpoints_eoc <- read_csv("checkpoints_eoc.csv")
+media_views <- read_csv("media_views.csv")
+heatmap_data <- read_csv("heatmap_data.csv")
 ```
 
-## Executive summary (update pls)
+## Summary
 
-- Something goes here
+-   Engagement and distraction
+-   Structure of the content
+-   Future opportunities
 
-## Looking at grades throughout book
+## Time spent on each chapter
 
-- Grades decrease throughout the book chapters
-
-```{r boxplot_of_eoc_by_chapter}
-checkpoints_eoc %>%
-  ggplot(aes(x=reorder(as.character(chapter_number), as.numeric(chapter_number)), y=EOC)) +
-  geom_boxplot() +
-  labs(title = "EOC statistics by chapter", x="chapter", y="EOC") +
-  scale_x_discrete()
-```
-
-- This is true not just for the interquartile range of students but also the top and bottom 1%
-  - It is not just the low end of students dragging down the statistics
+```{r median_engaged}
+views_eoc <- inner_join(page_views,checkpoints_eoc,by=c("student_id", "chapter_number", "book")) %>% 
+  select(book,chapter_number,section_number,engaged,off_page_brief, student_id,EOC)
   
+average_eoc <- stats::aggregate(EOC~chapter_number,views_eoc,median) #average EOC
+
+average_engage <- stats::aggregate(engaged~chapter_number,views_eoc,median)
+
+ggplot() +
+  geom_col(data = average_engage, mapping = aes(x = as.factor(chapter_number), y=engaged, fill="Median engagment"),
+           colour="black",alpha=0.7)+
+  scale_fill_manual(NULL, values = "light blue") +
+  geom_line(data = average_eoc, mapping = aes(x=chapter_number, y=EOC*200000, linetype="Median EOC"),colour="blue") +
+  theme_bw() +
+  labs(y="Median EOC") +
+  scale_y_continuous(
+    name="Median Engagement (milliseconds)",
+    sec.axis=sec_axis(~.*(1/200000),name="Median EOC")) +
+  labs(x="Chapter Number",title="Engagement vs EOC for College/Statistics and Data Science (ABC)") +
+  theme(legend.background = element_rect(fill = "transparent"), 
+        legend.box.background = element_rect(fill = "transparent", colour = NA),
+        legend.key = element_rect(fill = "transparent"), 
+        legend.spacing = unit(-1, "lines")) +
+  guides(linetype = guide_legend(title="Legend"))
+```
+
+## Top and bottom students after chapter one
+
 ```{r eoc_percentiles}
 # Sort the data by EOC
 sorted_data <- checkpoints_eoc %>% 
@@ -74,49 +102,515 @@ checkpoints_eoc %>%
   ungroup() %>% 
   ggplot() +
   geom_line(aes(x = chapter_number, y = average_eoc, colour = percentile, linetype = percentile)) +
+  theme_bw() +
   scale_colour_manual(values = c("top" = "blue", "bottom" = "red", "middle" = "black")) +
   scale_linetype_manual(values = c("top" = "solid", "bottom" = "solid", "middle" = "dashed")) +
-  guides(colour = guide_legend(override.aes = list(title = "Percentile")))
+  guides(colour = guide_legend(override.aes = list(title = "Percentile"))) 
 ```
 
-- We additionally see that chapter 11 has an abnormal dip in grade
-  - Abnormal dip = below the trend of decreasing grade as students progress to later (harder) chapters
+## Spread in grades and engagement
+
+-   Does this match with EOC data?
+
+```{r tilemap, echo=FALSE, warning=FALSE}
+pageviewsbychapter1 <- page_views %>%
+  mutate(date = substr(dt_accessed, start = 1, stop = 10)) %>%
+  mutate(weekday = weekdays(as.Date(date))) %>%
+  filter(!is.na(chapter_number)) %>%
+  filter(!is.na(engaged)) %>%
+  select(student_id, chapter_number, engaged) %>%
+  mutate(interval = round(engaged/600000, 0)) %>%
+  group_by(chapter_number, student_id) %>%
+  mutate(time = sum(interval)) %>%
+  filter(time<36) %>%
+  select(student_id, chapter_number, time) %>%
+  distinct() %>%
+  mutate(count = 1) %>%
+  select(student_id, chapter_number, count, time)
+
+table1 <- pageviewsbychapter1[order(pageviewsbychapter1$chapter_number, pageviewsbychapter1$time), ] %>%
+  group_by(chapter_number, time) %>%
+  summarise(N = sum(count), .groups="keep")
+
+p1 <- ggplot(table1, aes(chapter_number, time)) +
+  geom_tile(aes(fill = N), colour = "grey", na.rm = TRUE) +
+  scale_fill_gradient(low="white", high="blue") +
+  guides(fill=guide_legend(title="Total students")) +
+  labs(title = "Heat map of students by chapter and 10-min intervals",
+       x = "Chapter number",
+       y = "10-Minute intervals") +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
+  scale_x_continuous(breaks = seq(min(table1$chapter_number, na.rm = TRUE), max(table1$chapter_number, na.rm = TRUE), by = 1)) +
+  scale_y_continuous(breaks = seq(min(table1$time, na.rm = TRUE), max(table1$time, na.rm = TRUE), by = 1)) 
+
+p2 <- checkpoints_eoc %>%
+  ggplot(aes(x=reorder(as.character(chapter_number), as.numeric(chapter_number)), y=EOC)) +
+  geom_boxplot() +
+  geom_smooth(method = "lm", se = TRUE, colour = "red", aes(group=1)) +
+  labs(title = "EOC statistics by chapter", x="chapter", y="EOC")+
+  scale_x_discrete() +
+  theme_minimal()
+
+p1+p2
+```
+
+## Distraction time by chapter
+
+```{r chapter_breakdown}
+distractions_by_section_abcd <- page_views %>% 
+  select(book, chapter_number, section_number, off_page_brief) %>% 
+  filter(book == "College / Advanced Statistics and Data Science (ABCD)",
+         chapter_number == c(3, 10, 12)) %>% 
+  filter(!is.na(off_page_brief)) %>% 
+  group_by(book, chapter_number, section_number) %>% 
+  summarise(mean = mean(off_page_brief)) %>% 
+  mutate(chapter_name = case_when(
+    chapter_number == 3 ~ "Chapter 3",
+    chapter_number == 10 ~ "Chapter 10",
+    chapter_number == 12 ~ "Chapter 12"
+  ))
+
+# Convert from milliseconds to seconds
+distractions_by_section_abcd$mean <- distractions_by_section_abcd$mean/1000
+
+# Adjustments to ensure chapters are in chronological order
+chapter_order <- c("Chapter 3", "Chapter 10", "Chapter 12")
+
+distractions_by_section_abcd <- distractions_by_section_abcd %>%
+  mutate(chapter_name = factor(chapter_name, levels = chapter_order))
+
+# Plotting
+p1 <- distractions_by_section_abcd %>% 
+  ggplot(mapping = aes(x = section_number, y = mean)) +
+  geom_bar(stat = "identity") +
+  facet_wrap(~chapter_name, scales = "free_x") +
+  scale_x_continuous(breaks = seq(min(distractions_by_section_abcd$section_number), 
+                                  max(distractions_by_section_abcd$section_number))) +
+  ggtitle("Average Distraction Time Per Section
+      for College / Advanced Statistics and Data Science (ABCD)") +
+  xlab("Section Number") +
+  ylab("Mean Distraction Time (Seconds)") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  theme_bw()
   
-## Time spent on each chapter
 
-```{r median_engaged}
-views_eoc <- inner_join(page_views,checkpoints_eoc,by=c("student_id", "chapter_number", "book")) %>% 
-  select(book,chapter_number,section_number,engaged,off_page_brief, student_id,EOC) %>% 
-  filter(book=="College / Statistics and Data Science (ABC)") 
-  
-average_eoc <- stats::aggregate(EOC~chapter_number,views_eoc,median) #average EOC
+# Distractions Per Section by Chapters of Concern for College ABC ---------
 
-average_engage <- stats::aggregate(engaged~chapter_number,views_eoc,median)
+distractions_by_section_abc <- page_views %>% 
+  select(book, chapter_number, section_number, off_page_brief) %>% 
+  filter(book == "College / Statistics and Data Science (ABC)",
+         chapter_number == c(11, 12, 13)) %>% 
+  filter(!is.na(off_page_brief)) %>% 
+  group_by(book, chapter_number, section_number) %>% 
+  summarise(mean = mean(off_page_brief)) %>% 
+  mutate(chapter_name = case_when(
+    chapter_number == 11 ~ "Chapter 11",
+    chapter_number == 12 ~ "Chapter 12",
+    chapter_number == 13 ~ "Chapter 13"
+  ))
 
-ggplot() +
-  geom_col(data = average_engage, mapping = aes(x = as.factor(chapter_number), 
-                                             y=engaged),
-           colour="black",fill="lightblue",alpha=0.7)+
-  geom_line(data = average_eoc, mapping = aes(x=chapter_number, y=EOC*200000),
-            colour="blue")+
-  labs(y="Median EOC")+
-  scale_y_continuous(
-    name="Median Engagement (milliseconds)",
-    sec.axis=sec_axis(~.*(1/200000),name="Median EOC"))+
-  labs(x="Chapter Number",title="Engagement vs EOC for College/Statistics and Data Science (ABC)")
+# Convert from milliseconds to seconds
+distractions_by_section_abc$mean <- distractions_by_section_abc$mean/1000
+
+# Adjustments to ensure chapters are in chronological order
+chapter_order <- c("Chapter 11", "Chapter 12", "Chapter 13")
+
+distractions_by_section_abc <- distractions_by_section_abc %>%
+  mutate(chapter_name = factor(chapter_name, levels = chapter_order))
+
+# Plotting
+p2 <- distractions_by_section_abc %>% 
+  ggplot(mapping = aes(x = section_number, y = mean)) +
+  geom_bar(stat = "identity") +
+  facet_wrap(~chapter_name, scales = "free_x") +
+  scale_x_continuous(breaks = seq(min(distractions_by_section_abc$section_number), 
+                                  max(distractions_by_section_abc$section_number))) +
+  ggtitle("Average Distraction Time Per Section
+      for College / Statistics and Data Science (ABC)") +
+  xlab("Section Number") +
+  ylab("Mean Distraction Time (Seconds)") +
+  theme(plot.title = element_text(hjust = 0.5)) + theme_bw()
+
+
+# Distractions Per Section for Chapters of Concern for High School --------
+
+distractions_by_section_hs <- page_views %>% 
+  select(book, chapter_number, section_number, off_page_brief) %>% 
+  filter(book == "High School / Advanced Statistics and Data Science I (ABC)",
+         chapter_number == c(3, 4, 10)) %>% 
+  filter(!is.na(off_page_brief)) %>% 
+  group_by(book, chapter_number, section_number) %>% 
+  summarise(mean = mean(off_page_brief)) %>% 
+  mutate(chapter_name = case_when(
+    chapter_number == 3 ~ "Chapter 3",
+    chapter_number == 4 ~ "Chapter 4",
+    chapter_number == 10 ~ "Chapter 10"
+  ))
+
+# Convert from milliseconds to seconds
+distractions_by_section_hs$mean <- distractions_by_section_hs$mean/1000
+
+# Adjustments to ensure chapters are in chronological order
+chapter_order <- c("Chapter 3", "Chapter 4", "Chapter 10")
+
+distractions_by_section_hs <- distractions_by_section_hs %>%
+  mutate(chapter_name = factor(chapter_name, levels = chapter_order))
+
+# Plotting
+p3 <- distractions_by_section_hs %>% 
+  ggplot(mapping = aes(x = section_number, y = mean)) +
+  geom_bar(stat = "identity") +
+  facet_wrap(~chapter_name, scales = "free_x") +
+  scale_x_continuous(breaks = seq(min(distractions_by_section_hs$section_number), 
+                                  max(distractions_by_section_hs$section_number))) +
+  ggtitle("Average Distraction Time Per Section
+      for High School / Advanced Statistics and Data Science I (ABC)") +
+  xlab("Section Number") +
+  ylab("Mean Distraction Time (Seconds)") +
+  theme(plot.title = element_text(hjust = 0.5)) + theme_bw()
+
+
+distractions_by_chapter <- page_views %>% 
+  select(book, chapter_number, off_page_brief) %>% 
+  group_by(book, chapter_number) %>% 
+  filter(!is.na(chapter_number)) %>% 
+  filter(!is.na(off_page_brief)) %>% 
+  summarise(mean = mean(off_page_brief))
+
+distractions_by_chapter$mean <- distractions_by_chapter$mean/1000
+
+distractions_by_chapter %>%
+  group_by(book) %>%
+  mutate(rank = rank(-mean)) %>% # Rank distractions by mean time (descending)
+  mutate(top_3 = ifelse(rank <= 3, 1, 0)) %>% # Create a binary column for top 3 or not
+  arrange(desc(mean), .by_group = TRUE) %>% 
+  ggplot(mapping = aes(x = chapter_number, y = mean, fill = factor(top_3))) +
+  geom_bar(stat = "identity") +
+  theme_bw() +
+  facet_wrap(~book, scales = "free_x") +
+  scale_x_continuous(breaks = seq(min(distractions_by_chapter$chapter_number), 
+                                  max(distractions_by_chapter$chapter_number))) +
+  scale_fill_manual(values = c("#3bb7f1", "darkblue"), labels = c("Other", "Top 3")) + # Colors for top 3 and others
+  ggtitle("Average Distraction Time Per Chapter") +
+  xlab("Chapter Number") +
+  ylab("Mean Distraction Time (Seconds)") +
+  theme(plot.title = element_text(hjust = 0.5),
+        legend.position = "none")
 
 ```
 
-## Do students realise what they fail to learn?
+## Distraction time by section
 
-- Hannah's boxplot graph of survey results for each chapter
-  - Remains consistent;y positive for all chapters
-- But the boxplot graph of EOC shows decreasing results towards the later chapters
+```{r section_breakdown}
+library(patchwork)
+p1/p2
+```
+
+::: notes
+Ch3 S2: Visualising Data with Histograms Ch10 S1: The Problem of Inference Ch12 S1: From Hypothesis Testing to Confidence Intervals
+:::
+
+## Engagement vs Distraction Time
+
+```{r,LINEAR_REGRESSION_engagement_and_distraction_time}
+page_views %>% 
+  filter(!is.na(engaged),!is.na(off_page_brief)) %>% 
+  group_by(chapter_number,section_number,book) %>% 
+  select(book,engaged,off_page_brief) %>% 
+  summarise(mean_engaged=mean(engaged),mean_off=mean(off_page_brief)) %>% 
+  filter(mean_engaged<=1500000) %>% 
+  ggplot()+
+  geom_point(aes(x=mean_engaged,y=mean_off,color=book))+
+  theme_bw() +
+  geom_smooth(aes(x=mean_engaged,y=mean_off),color="black",method = "lm", se = TRUE) + 
+  labs(x = "Time taken to read page",
+       y = "Mean distraction time (milliseconds)",
+       title = "Engagement vs time distracted")
+```
+
+## Video Effectiveness
+
+Videos are not highly effective in driving engagement
+
+```{r video_distractions}
+media_views %>%
+  drop_na(proportion_video) %>%
+  group_by(media_id, book) %>%
+  count(page, Engaged = proportion_time > 0.8) %>%
+  mutate(media_id = case_when(
+    media_id == "379060892" ~ "Ch4 S2 Video 1",
+    media_id == "379150092" ~ "Ch5 S9 Video 2",
+    media_id == "379319375" ~ "Ch4 S2 Video 2",
+    media_id == "379319558" ~ "Ch5 S9 Video 1",
+    media_id == "381974697" ~ "Ch4 S4",
+    TRUE ~ as.character(media_id)
+  )) %>%
+  mutate(book = case_when(
+    book == "College / Statistics and Data Science (ABC)" ~ "College Standard",
+    book == "College / Advanced Statistics and Data Science (ABCD)" ~ "College Advanced",
+    book == "High School / Advanced Statistics and Data Science I (ABC)" ~ "High School",
+    TRUE ~ as.character(book)
+    )) %>%
+  ggplot(mapping = aes(
+        x = format(media_id),
+        y = n,
+        fill = Engaged)) +
+      geom_bar(stat = "identity") +
+  theme_bw() +
+      facet_wrap(~book, scales = "free") +
+      theme(axis.text.x = element_text(angle = 35, hjust = 1)) +
+      xlab("Video") +
+      ylab("Number of Students") +
+      ggtitle("Number of Students Engaged With Videos") +
+      theme(plot.title = element_text(hjust = 0.5)) +
+      scale_fill_discrete(name = "Engaged", labels = c("No", "Yes"))
+```
+
+::: notes
+Insights and Recommendations
+
+-   Students are only somewhat engaged
+-   Sample size is relatively small due to many NA values
+-   We recommend a better data collection process: Check how data is classified (if students don't interact with the video, put 0 instead of NA), add notes if NA on purpose
+-   Use checkpoints within each video to drive engagement
+:::
+
+------------------------------------------------------------------------
+
+::: {style="color: #FFFFFF"}
+Chapters 11-16
+
+-   55% overall compared to 66% of chapters 1-10
+:::
+
+::: {layout-ncol="2"}
+![](Int_vid_1.png){width="70%"}
+
+![](Int_vid_2.png){width="70%"}
+:::
+
+## Effective Question Types
+
+::: columns
+::: {.column width="65%"}
+```{r graph1, fig.height=10, fig.width=12, fig.align='left'}
+responses %>%
+  select(points_earned, points_possible, lrn_type, chapter_number) %>% 
+  group_by(lrn_type) %>% 
+  filter(!is.na(points_earned)) %>% 
+  summarise(average_points = sum(points_earned, na.rm = TRUE)/sum(points_possible, na.rm = TRUE)) %>%
+  mutate(lrn_type = if_else(is.na(lrn_type), "Code", lrn_type)) %>% 
+  ggplot() +
+    geom_col(aes(x = reorder(lrn_type, +average_points), y = average_points, fill = reorder(lrn_type, +average_points))) + 
+  theme_bw() +
+    labs(x="Question type", y="Average Points (%)") + 
+    scale_x_discrete(labels = c("Choice\nMatrix", "Short\nText", "Sort\nList", "Image\nclose\nAssociation", "R Code", "Multi\nChoice\nQs", "Close\nAssoc.", "Formulae", "Assoc.", "Plain\nText")) +
+    scale_y_continuous(breaks = seq(0, 1, by = 0.1)) +
+    scale_fill_manual(values=c("red","#636363","red","red","red","#636363","#636363","red","#636363","cyan"), guide = "none") + 
+    theme(axis.text = element_text(size = 20), axis.title = element_text(size = 36))
+```
+:::
+
+::: {.column width="35%"}
+-   Null responses for red columns
+-   Question Grading
+    -   Choice Matrix
+    -   Plain Text
+:::
+:::
+
+------------------------------------------------------------------------
+
+::: columns
+::: {.column width="50%"}
+![](fig2.png) ![](fig4.png)
+:::
+
+::: {.column width="50%"}
+```{r fig3, fig.height=10, fig.width=9}
+q_type <- c("choice matrix", "sort list", "image association", "code", "Formula")
+null_percent <- c(443/6667 *100, 192/1311 *100, 70/2384 *100, 13232/383174 *100, 5/389 *100)
+null_answer_percent <- as_tibble(q_type, null_percent)
+null_answer_percent %>% 
+  ggplot() +
+  geom_col(aes(x = as_factor(q_type), y = null_percent, fill = q_type)) + 
+  theme_bw() +
+  labs(x = "Question Type", y = "Empty answers (%)") + 
+  scale_x_discrete(labels = c("Choice\nMatrix", "Sort\nList", "Assoc.", "R Code", "Formulae")) +
+  scale_fill_manual(values=c("red","red","red","red","red"), guide = "none") +
+  theme(axis.text = element_text(size = 24), axis.title = element_text(size = 36))
+```
+:::
+:::
+
+## Poorly Done Sections
+
+::: columns
+::: {.column width="50%"}
+```{r fig4, fig.height=10, fig.width=12}
+responses %>% 
+  filter(lrn_type != "plaintext", !is.na(points_earned), !is.na(points_possible)) %>% 
+  group_by(chapter_number, section_number, review_flag) %>% 
+  summarise(ave = sum(points_earned)/sum(points_possible)) %>% 
+  mutate(parts = paste0(as.character(chapter_number), ".", as.character(section_number))) %>%
+  ungroup() %>% 
+  filter(ave <= 0.45) %>% 
+  select(chapter_number, parts, ave, review_flag) %>%
+  mutate(colour_flag = if_else(chapter_number > 13, TRUE, FALSE)) %>% 
+  ggplot() +
+  geom_col(aes(x = factor(reorder(parts, +ave)), y = ave, fill = colour_flag)) +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 90)) +
+  scale_y_continuous(breaks = seq(0, 1, by = 0.1)) +
+  labs(x = "Chapter & Section", y = "Average Mark (%)") +
+  scale_fill_discrete(guide = "none") + 
+  theme(axis.text = element_text(size = 20), axis.title = element_text(size = 36))
+```
+:::
+
+::: {.column width="50%"}
+::: {style="font-size: 25px"}
+::: {style="color: #F8766D"}
+Chapters 1-10, \< 45% average points
+
+-   The Concept of Distribution
+
+-   Shape, Center, Spread, and Weird Things
+
+-   Exploring the Mean
+
+-   Mathematical Notation
+
+-   Partitioning Sums of Squares
+
+-   The Empirical Rule
+
+-   Sampling Distribution
+:::
+
+::: {style="color: #02BFC4"}
+Chapters 11-16
+
+-   45% overall compared to 55% of chapters 1-10
+:::
+:::
+:::
+:::
+
+## Heatmaps
+
+```{r heatmaps, echo=FALSE, message=FALSE}
+states(cb = TRUE, class = "sf", progress_bar = FALSE) %>%
+  filter(!as.numeric(STATEFP) %in% c(2, 15, 60, 66, 69, 72, 78)) %>%
+  right_join(heatmap_data, by = c("NAME" = "state")) %>%
+  mutate(percentkata = course_kata/stem_degree) %>%
+  ggplot(aes(fill = percentkata)) +
+  geom_sf() +
+  scale_fill_gradient(low="white", high="honeydew3") +
+  guides(fill=guide_legend(title="% of STEM instituitions using CourseKata")) +
+  labs(title = "Heat map of STEM institutions using CourseKata (Current market)") +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+```
+
+## Heatmaps
+
+```{r heatmaps2, echo=FALSE, message=FALSE}
+states(cb = TRUE, class = "sf", progress_bar = FALSE) %>%
+  filter(!as.numeric(STATEFP) %in% c(2, 15, 60, 66, 69, 72, 78)) %>%
+  right_join(heatmap_data, by = c("NAME" = "state")) %>%
+  mutate(percentagestem = stem_degree/all_degree*100) %>%
+  ggplot(aes(fill = percentagestem)) +
+  geom_sf() +
+  scale_fill_gradient(low="honeydew3", high="blue") +
+  guides(fill=guide_legend(title = " % of STEM instituitions in USA")) +
+  labs(title = "Heat map of STEM institutions in USA (Total addressable market)") +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+```
+
+Source: https://www.nsf.gov/nsb/sei/edTool/data/college-19.html
+
+## Community colleges
+
+```{r externa_data}
+courses <- c("Liberal arts and sciences, general studies, and humanities", "Health professions and related programs", "Business, management, marketing and support services", "Engineering technologies and engineering-related fields", "Mathematics and statistics")
+numbers <- c(400447, 181046, 106681, 48748, 4842)
+tibble(courses, numbers) %>%
+  # arrange(courses, -numbers) %>% 
+  ggplot() +
+  geom_col(aes(y=reorder(courses, +numbers), x=numbers), fill = "cyan") +
+  theme_bw() +
+  labs(title = "Graduates from community colleges 2020-21, by field of study",
+       x= "Number of graduates",
+       y="Field of study")
+```
+
+External Data Source: Statista
+
+## Final recommendations: Improving on review questions
+
+- Add checkpoints to videos to improve engagement
+
+- Change marking criteria for choice matrix and plain text qns
+
+- Revise particular sections
+
+- Improve outreach to other states
+
+- Choosing level of difficulty for questions - student can choose a level of difficulty for these review questions depending on how confident they are. 
+
+- Personalisation (Dynamic question bank) - the platform will draw questions with different levels of difficulty depending on how the student is doing.
+
+# Question time
+
+# Appendix
+
+## Recommendation: Increasing addressable market
+
+```{r identifying timezone, warning=FALSE, echo=FALSE}
+page_views %>%
+  mutate(GMT = substr(dt_accessed, start = 12, stop = 19)) %>% 
+  select(institution_id, GMT) %>% 
+  mutate(basetime = hms::as_hms(GMT)) %>% 
+  mutate(basetime = as.integer(basetime / 3600)) %>% 
+  mutate(pacifictime = basetime - 8) %>% 
+  ggplot(aes(x = pacifictime)) +
+    geom_bar() +
+  facet_wrap(~institution_id, scales = "free_y") +
+  labs(title = "Page Views by Pacific Time",
+       x = "Pacific Time",
+       y = "Frequency") +
+  theme_minimal() +
+  theme(strip.text = element_text(size=4))
+```
+
+## Distribution of EOC across textbooks
+
+```{r EOC, echo=FALSE, warning=FALSE}
+checkpoints_eoc %>%
+  ggplot() +
+  geom_density(aes(EOC)) +
+  facet_wrap(~book) +
+  labs(title = "Density of EOC by book", x = "grade", y = "density") +
+  theme_minimal() +
+  theme(strip.text = element_text(size =5))
+```
+
+## Looking at grades throughout book
+
+```{r boxplot_of_eoc_by_chapter}
+checkpoints_eoc %>%
+  ggplot(aes(x=reorder(as.character(chapter_number), as.numeric(chapter_number)), y=EOC)) +
+  geom_boxplot() +
+  labs(title = "EOC statistics by chapter", x="chapter", y="EOC") +
+    scale_x_discrete() +
+    theme_bw()
+```
 
 ## Review question performance
 
-- Review questions are done at the end of each chapter
-- We hypothesised that they would be done better then the non-review questions (which are when the students have only just learnt the content).
+-   Review questions are done at the end of each chapter
+-   We hypothesised that they would be done better then the non-review questions (which are when the students have only just learnt the content).
+
 ```{r review_graph}
 responses %>%
   select(points_earned, points_possible, review_flag, chapter_number) %>% 
@@ -135,15 +629,13 @@ responses %>%
 
 ## Trying to expain poor review performance
 
-- Do students spend less time on the later review pages trying to speed through it?
+-   Do students spend less time on the later review pages trying to speed through it?
 
-```{r heatmap_by_review_or_not_page}
-# will show if they start spending way less time on the review
-```
-
-
-## Performance by question type
-
-```{r question_type_avg_points}
-
+```{r boxplot_by_review_or_not_page}
+page_views %>% 
+  filter(chapter_number <= 9) %>% 
+  ggplot() +
+  geom_boxplot(aes(x=reorder(as.character(chapter_number), as.numeric(chapter_number)), y = engaged, fill=review_flag), outlier.shape = ".") +
+  theme_bw() +
+  coord_cartesian(ylim = c(0, 1000000))
 ```
